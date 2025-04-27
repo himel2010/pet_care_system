@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Pet Care System</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background-color: #3a7bd5;
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .user-controls a {
+            color: white;
+            text-decoration: none;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 280px;
+            background-color: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .search-box {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .contact-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        .contact {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+        .contact:hover {
+            background-color: #f5f7fa;
+        }
+        .contact.active {
+            background-color: #e6f0ff;
+        }
+        .contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ddd;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #666;
+        }
+        .contact-info {
+            flex: 1;
+        }
+        .contact-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .contact-preview {
+            font-size: 12px;
+            color: #777;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: white;
+            margin-left: 8px;
+        }
+        .tag.vet {
+            background-color: #28a745;
+        }
+        .tag.daycare {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            padding: 12px 20px;
+            background-color: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+        .chat-header-name {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            word-break: break-word;
+        }
+        .message.received {
+            background-color: white;
+            border: 1px solid #ddd;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .message.sent {
+            background-color: #3a7bd5;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        .message-time {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.7;
+            text-align: right;
+        }
+        .input-area {
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+        }
+        .input-area input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .send-btn {
+            background-color: #3a7bd5;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .send-btn:hover {
+            background-color: #2a5db0;
+        }
+        
+        /* Responsive designs */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+            .contact-info, .search-box {
+                display: none;
+            }
+            .contact {
+                justify-content: center;
+            }
+            .contact-avatar {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pet Care Chat</h1>
+        <div class="user-controls">
+            <a href="#">My Profile</a>
+            <a href="#">Settings</a>
+            <a href="index.html">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <div class="search-box">
+                <input type="text" placeholder="Search contacts...">
+            </div>
+            <div class="contact-list">
+                <div class="contact active" data-id="1" data-type="vet">
+                    <div class="contact-avatar">DV</div>
+                    <div class="contact-info">
+                        <div class="contact-name">Dr. Valerie Smith<span class="tag vet">Vet</span></div>
+                        <div class="contact-preview">Hi there! How can I help with your pet today?</div>
+                    </div>
+                </div>
+                <div class="contact" data-id="2" data-type="vet">
+                    <div class="contact-avatar">JM</div>
+                    <div class="contact-info">
+                        <div class="contact-name">Dr. James Miller<span class="tag vet">Vet</span></div>
+                        <div class="contact-preview">Has Bella been eating normally?</div>
+                    </div>
+                </div>
+                <div class="contact" data-id="3" data-type="daycare">
+                    <div class="contact-avatar">PP</div>
+                    <div class="contact-info">
+                        <div class="contact-name">Pawsome Pals<span class="tag daycare">Daycare</span></div>
+                        <div class="contact-preview">We have an opening this Saturday if you'd like to book.</div>
+                    </div>
+                </div>
+                <div class="contact" data-id="4" data-type="daycare">
+                    <div class="contact-avatar">HD</div>
+                    <div class="contact-info">
+                        <div class="contact-name">Happy Dogs<span class="tag daycare">Daycare</span></div>
+                        <div class="contact-preview">Your booking is confirmed for next week!</div>
+                    </div>
+                </div>
+                <div class="contact" data-id="5" data-type="vet">
+                    <div class="contact-avatar">AJ</div>
+                    <div class="contact-info">
+                        <div class="contact-name">Dr. Andrea Johnson<span class="tag vet">Vet</span></div>
+                        <div class="contact-preview">The test results look good. Nothing to worry about.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="contact-avatar">DV</div>
+                <div class="chat-header-name">Dr. Valerie Smith</div>
+            </div>
+            
+            <div class="messages" id="messageArea">
+                <div class="message received">
+                    Hello! I'm Dr. Valerie Smith. How can I help you and your pet today?
+                    <div class="message-time">11:30 AM</div>
+                </div>
+                
+                <div class="message sent">
+                    Hi Dr. Smith! My dog Max has been scratching a lot lately. I'm concerned he might have some skin issues.
+                    <div class="message-time">11:32 AM</div>
+                </div>
+                
+                <div class="message received">
+                    I understand your concern. Excessive scratching can indicate several issues. How long has this been going on? And have you noticed any other symptoms like hair loss or redness on the skin?
+                    <div class="message-time">11:35 AM</div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button class="send-btn" id="sendButton">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const messageArea = document.getElementById('messageArea');
+        const contacts = document.querySelectorAll('.contact');
+        
+        // Function to add a new message
+        function addMessage(content, isSent) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+            
+            // Message content
+            messageDiv.textContent = content;
+            
+            // Add timestamp
+            const timeDiv = document.createElement('div');
+            timeDiv.className = 'message-time';
+            
+            // Get current time
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 || 12;
+            const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+            
+            timeDiv.textContent = `${formattedHours}:${formattedMinutes} ${ampm}`;
+            messageDiv.appendChild(timeDiv);
+            
+            // Add to message area
+            messageArea.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+        
+        // Handle send button click
+        sendButton.addEventListener('click', function() {
+            const message = messageInput.value.trim();
+            if (message) {
+                // Add user message
+                addMessage(message, true);
+                
+                // Clear input
+                messageInput.value = '';
+                
+                // Simulate response (would be replaced with actual backend call)
+                setTimeout(() => {
+                    simulateResponse();
+                }, 1000);
+            }
+        });
+        
+        // Handle Enter key press
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+        
+        // Handle contact selection
+        contacts.forEach(contact => {
+            contact.addEventListener('click', function() {
+                // Remove active class from all contacts
+                contacts.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked contact
+                this.classList.add('active');
+                
+                // Update chat header
+                const avatar = this.querySelector('.contact-avatar').textContent;
+                const name = this.querySelector('.contact-name').textContent;
+                
+                document.querySelector('.chat-header .contact-avatar').textContent = avatar;
+                document.querySelector('.chat-header-name').textContent = name.replace('Vet', '').replace('Daycare', '');
+                
+                // Clear messages
+                messageArea.innerHTML = '';
+                
+                // Add initial message based on contact type
+                const contactType = this.getAttribute('data-type');
+                if (contactType === 'vet') {
+                    addMessage(`Hello! I'm ${name.split('<')[0].trim()}. How can I help you and your pet today?`, false);
+                } else {
+                    addMessage(`Hi there! This is ${name.split('<')[0].trim()}. How can we assist with your daycare needs?`, false);
+                }
+            });
+        });
+        
+        // Function to simulate responses (would be replaced with backend communication)
+        function simulateResponse() {
+            const activeContact = document.querySelector('.contact.active');
+            const contactType = activeContact.getAttribute('data-type');
+            
+            let responseMessages = [];
+            
+            if (contactType === 'vet') {
+                responseMessages = [
+                    "Thank you for sharing that. Could you provide more details about your pet's symptoms?",
+                    "Based on what you've described, it could be allergies or a minor skin infection. I'd recommend scheduling an appointment for a proper examination.",
+                    "I understand your concern. Let's discuss the possible causes and treatments for these symptoms."
+                ];
+            } else {
+                responseMessages = [
+                    "Thank you for your message. We'd be happy to help with your daycare needs.",
+                    "We have several openings this week. What days were you considering?",
+                    "Your pet is always welcome here! Let us know if you have any specific requirements."
+                ];
+            }
+            
+            // Select random response
+            const randomIndex = Math.floor(Math.random() * responseMessages.length);
+            addMessage(responseMessages[randomIndex], false);
+        }
+
+        // NOTES FOR CONNECTING TO DJANGO BACKEND:
+        /*
+        1. Use WebSockets for real-time chat:
+           - Install Django Channels in your Django project
+           - Set up a consumer in Django to handle WebSocket connections
+           - Connect this front-end to the WebSocket server
+
+        2. To retrieve chat history:
+           - Make a fetch or axios request to your Django API
+           - Example:
+             fetch('http://your-django-backend-url/api/chats/history/?contact_id=' + activeContactId, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+             })
+             .then(response => response.json())
+             .then(data => {
+                // Clear existing messages
+                messageArea.innerHTML = '';
+                
+                // Add each message from history
+                data.messages.forEach(msg => {
+                    addMessage(msg.content, msg.sender_id === currentUserId);
+                });
+             });
+
+        3. To send messages to backend:
+           - Replace the send button click handler with a WebSocket send
+           - Or make a POST request to your API
+           - Example:
+             fetch('http://your-django-backend-url/api/chats/send/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                },
+                body: JSON.stringify({
+                    receiver_id: activeContactId,
+                    message: messageInput.value
+                })
+             });
+
+        4. To get contacts list from backend:
+           - Make a fetch or axios request on page load
+           - Example:
+             fetch('http://your-django-backend-url/api/contacts/', {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+             })
+             .then(response => response.json())
+             .then(data => {
+                // Generate contact list HTML
+                const contactsHtml = data.contacts.map(contact => `
+                    <div class="contact" data-id="${contact.id}" data-type="${contact.type}">
+                        <div class="contact-avatar">${getInitials(contact.name)}</div>
+                        <div class="contact-info">
+                            <div class="contact-name">${contact.name}<span class="tag ${contact.type}">${contact.type}</span></div>
+                            <div class="contact-preview">${contact.last_message || 'No messages yet'}</div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                document.querySelector('.contact-list').innerHTML = contactsHtml;
+                
+                // Re-attach event listeners
+                attachContactEventListeners();
+             });
+        */
+    </script>
+</body>
+</html>
