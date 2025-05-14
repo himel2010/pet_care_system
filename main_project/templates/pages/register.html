@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Pet Care System</title>
+    <link rel="stylesheet" href="{% static 'css/register.css' %}">
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo">
+            <h2>Pet Care System</h2>
+        </div>
+        
+        <h3>Create Your Account</h3>
+        
+        <form id="registerForm">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="userType">I am registering as a:</label>
+                <select id="userType" name="userType" required>
+                    <option value="pet_owner">Pet Owner</option>
+                    <option value="vet">Veterinarian</option>
+                    <option value="daycare">Day Care Provider</option>
+                </select>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="Enter your first name" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="3" placeholder="Enter your complete address" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Enter your phone number" required>
+                <div class="error-message" id="phoneError">Please enter a valid phone number</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                <div class="error-message" id="emailError">Please enter a valid email address</div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Create a password" required>
+                    <div class="error-message" id="passwordError">Password must be at least 6 characters</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required>
+                    <div class="error-message" id="confirmPasswordError">Passwords do not match</div>
+                </div>
+            </div>
+            
+            <!-- Conditional Fields for Pet Owner -->
+            <div id="petOwnerFields" class="conditional-fields">
+                <h3>Emergency Contact Information</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="emergencyPhone">Emergency Contact Phone</label>
+                        <input type="tel" id="emergencyPhone" name="emergencyPhone" placeholder="Enter phone number">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conditional Fields for Vet -->
+            <div id="vetFields" class="conditional-fields">
+                <h3>Professional Information</h3>
+                <div class="form-group">
+                    <label for="vetSpecialization">Specialization</label>
+                    <select id="vetSpecialization" name="vetSpecialization">
+                        <option value="">Select a specialization</option>
+                        <option value="general">General Practice</option>
+                        <option value="surgery">Surgery</option>
+                        <option value="dermatology">Dermatology</option>
+                        <option value="cardiology">Cardiology</option>
+                        <option value="neurology">Neurology</option>
+                        <option value="oncology">Oncology</option>
+                        <option value="dentistry">Dentistry</option>
+                        <option value="behavior">Behavior</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="vetQualification">Qualifications</label>
+                    <input type="text" id="vetQualification" name="vetQualification" placeholder="E.g., DVM, BVSc, etc.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="vetExperience">Years of Experience</label>
+                    <input type="number" id="vetExperience" name="vetExperience" min="0" placeholder="Enter years of experience">
+                </div>
+            </div>
+            
+            <!-- Conditional Fields for Daycare -->
+            <div id="daycareFields" class="conditional-fields">
+                <h3>Daycare Information</h3>
+                <div class="form-group">
+                    <label>Facility Type</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="indoor" name="indoor">
+                            <label for="indoor">Indoor Facility</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="outdoor" name="outdoor">
+                            <label for="outdoor">Outdoor Space</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="overnight" name="overnight">
+                            <label for="overnight">Overnight Care</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Accepted Pet Types</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="dogs" name="petType[]" value="dogs">
+                            <label for="dogs">Dogs</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cats" name="petType[]" value="cats">
+                            <label for="cats">Cats</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="birds" name="petType[]" value="birds">
+                            <label for="birds">Birds</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="reptiles" name="petType[]" value="reptiles">
+                            <label for="reptiles">Reptiles</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="smallMammals" name="petType[]" value="smallMammals">
+                            <label for="smallMammals">Small Mammals</label>
+                        </div>
+                    </div>
+                </div>
+                
+                
+            </div>
+            
+            <button type="submit" class="btn">Create Account</button>
+        </form>
+        
+        <div class="links">
+            <a class="login_page" href="{% url 'login' %}">Already have an account? Log in</a>
+
+
+    <script src="{% static 'js/register.js' %}"></script>
+</body>
+</html>

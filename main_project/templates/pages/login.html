@@ -128,7 +128,7 @@
         </form>
         
         <div class="links">
-            <a href="#">Forgot Password?</a> | <a href="#">Register Now</a>
+            <a href="#">Forgot Password?</a> | <a href="{% url 'register' %}">Register Now</a>
         </div>
         
         <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
@@ -162,7 +162,7 @@
             
             // If form is valid, send data to backend
             if (isValid) {
-                // Prepare the data to send to Django backend
+
                 const formData = {
                     user_type: userType,
                     email: email,
@@ -170,39 +170,29 @@
                 };
                 
                 // Temporary solution - log data and redirect
-                console.log('Form data to be sent to backend:', formData);
-                
-                // Redirect to chat page after successful login
-                // In a real implementation, this would happen after verification from backend
-                window.location.href = "{%url 'messenger' %}";
-                
-                // NOTES FOR CONNECTING TO DJANGO:
-                // This is where you would add the fetch or axios request to your Django backend
-                /* 
-                fetch('http://your-django-backend-url/api/login/', {
+
+                fetch('/login_validation/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData),
+                    body: JSON.stringify(formData)
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        // Store token if your backend uses token-based auth
-                        localStorage.setItem('authToken', data.token);
-                        // Redirect to chat page
-                        window.location.href = 'chat.html';
+                        // Only redirect on successful login
+                        window.location.href = "{% url 'dashboard' %}";
                     } else {
-                        // Handle login error
-                        alert(data.message || 'Login failed. Please check your credentials.');
+                        alert(data.message || 'Login failed. Please try again.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     alert('An error occurred during login. Please try again.');
                 });
-                */
+                
+
             }
         });
     </script>

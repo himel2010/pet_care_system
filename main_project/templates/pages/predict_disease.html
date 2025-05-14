@@ -1,0 +1,44 @@
+
+
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict Disease - Pet Care System</title>
+    <link rel="stylesheet" href="{% static 'css/predict_disease.css' %}">
+</head>
+{% block content %}
+<div class="symptoms-container">
+    <div class="logo">
+        <h2>Pet Disease Prediction</h2>
+    </div>
+    
+    <div class="symptoms-form">
+        <h3>Select Symptoms</h3>
+        <p class="instructions">Check all symptoms that your pet is experiencing:</p>
+
+        
+        <div class="checkbox-group" id="symptoms-checkboxes">
+            {% for symptom in symptoms %}
+                <div class="checkbox-item">
+                    <input type="checkbox" id="symptom-{{ symptom.id }}" name="symptoms" value="{{ symptom.id }}">
+                    <label for="symptom-{{ symptom.id }}">{{ symptom.name }}</label>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <button type="button" id="predict-btn" class="btn">Predict Disease</button>
+        
+        <div id="results" class="results-container" style="display: none;">
+            <h3>Prediction Results</h3>
+            <div id="prediction-result"></div>
+        </div>
+    </div>
+    
+    <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+</div>
+
+{% block extra_js %}
+<script src="{% static 'js/predict_disease.js' %}"></script>
+{% endblock %}
+{% endblock %}

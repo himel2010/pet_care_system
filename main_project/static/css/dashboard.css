@@ -1,0 +1,431 @@
+/* Dashboard Main Styles */
+:root {
+    --primary-color: #3a7bd5;
+    --primary-dark: #2a5db0;
+    --secondary-color: #f5f7fa;
+    --text-color: #333;
+    --text-light: #777;
+    --border-color: #eee;
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --danger-color: #dc3545;
+    --sidebar-width: 250px;
+    --header-height: 60px;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+  }
+  
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: var(--text-color);
+  }
+  
+  /* Dashboard Layout */
+  .dashboard-container {
+    display: flex;
+    min-height: 100vh;
+  }
+  
+  /* Sidebar Styles */
+  .sidebar {
+    width: var(--sidebar-width);
+    background-color: white;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    height: 100%;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: var(--transition);
+  }
+  
+  .sidebar-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .logo-img {
+    height: 40px;
+    margin-bottom: 10px;
+  }
+  
+  .sidebar-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+  }
+  
+  .user-info {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 15px;
+    border: 2px solid var(--primary-color);
+  }
+  
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .user-details h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+  }
+  
+  .user-type {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+  
+  .sidebar-nav {
+    padding: 15px 0;
+  }
+  
+  .nav-item {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    color: var(--text-color);
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .nav-item i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+  }
+  
+  .nav-item:hover, .nav-item.active {
+    background-color: rgba(58, 123, 213, 0.1);
+    color: var(--primary-color);
+  }
+  
+  .nav-item.active {
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  .nav-item.logout {
+    margin-top: 30px;
+    border-top: 1px solid var(--border-color);
+    color: var(--danger-color);
+  }
+  
+  .notification-badge {
+    background-color: var(--danger-color);
+    color: white;
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 10px;
+    margin-left: auto;
+  }
+  
+  .notification-badge.small {
+    padding: 1px 5px;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+  }
+  
+  /* Main Content Area */
+  .main-content {
+    margin-left: var(--sidebar-width);
+    flex: 1;
+    padding: 20px;
+    transition: var(--transition);
+  }
+  
+  /* Top Bar Styles */
+  .top-bar {
+    height: var(--header-height);
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+  
+  .search-container {
+    position: relative;
+    width: 300px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 8px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    outline: none;
+    transition: var(--transition);
+  }
+  
+  .search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(58, 123, 213, 0.2);
+  }
+  
+  .search-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+  }
+  
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+  }
+  
+  .notifications-dropdown, .user-dropdown {
+    margin-left: 20px;
+    position: relative;
+  }
+  
+  .notification-btn, .user-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+  
+  .user-btn img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+  
+  /* Content Sections */
+  .content-section {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+    padding: 25px;
+    display: none;
+  }
+  
+  .content-section.active {
+    display: block;
+  }
+  
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .section-header h2 {
+    margin: 0;
+    color: var(--primary-color);
+  }
+  
+  /* Buttons */
+  .edit-btn, .add-btn, .search-filter-btn, .mark-all-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: var(--transition);
+  }
+  
+  .edit-btn i, .add-btn i, .mark-all-btn i {
+    margin-right: 8px;
+  }
+  
+  .edit-btn:hover, .add-btn:hover, .search-filter-btn:hover, .mark-all-btn:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  /* Profile Card */
+  .profile-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+  }
+  
+  .profile-info {
+    padding: 20px;
+  }
+  
+  .info-group {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+  }
+  
+  .info-item {
+    width: 50%;
+    padding: 8px 0;
+  }
+  
+  .label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-light);
+    font-size: 12px;
+  }
+  
+  .value {
+    color: var(--text-color);
+  }
+  
+  /* Pet Cards Grid */
+  .pets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .pet-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+  
+  .pet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .pet-info {
+    padding: 15px;
+  }
+  
+  .pet-info h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+  }
+  
+  .pet-actions {
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .view-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .view-btn:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  /* Booking Container */
+  .booking-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  
+  .search-filters {
+    padding: 20px;
+    background-color: #f8f9fa;
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+  }
+  
+  .filter-group label {
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--text-light);
+  }
+  
+  .filter-select, .date-picker {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    outline: none;
+  }
+  
+  .filter-select:focus, .date-picker:focus {
+    border-color: var(--primary-color);
+  }
+  
+  .results-grid {
+    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+  
+  .vet-card, .daycare-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: var(--transition);
+  }
+  
+  .vet-card:hover, .daycare-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .vet-info, .daycare-info {
+    padding: 15px;
+  }
+  
+  .vet-info h3, .daycare-info h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+  }
+  
+  .vet-actions, .daycare-actions {
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .book-btn {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 12px;
+  }

@@ -1,0 +1,506 @@
+
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predict Disease - Pet Care System</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="{% static 'images/meow_pics.png' %}" alt="Pet Care Logo" class="logo-img">
+            <h3>Pet Care</h3>
+        </div>
+        
+        <div class="user-info">
+            <div class="avatar">
+                <img src="{% static 'images/user-avatar.png' %}" alt="User Avatar">
+            </div>
+            <div class="user-details">
+                <h4>{{ user.name }}</h4>
+                <span class="user-type">
+                    {% if is_petowner %}Pet Owner{% elif is_vet %}Veterinarian{% elif is_daycare %}Day Care{% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="nav-item active" data-target="profile">
+                    <i class="fas fa-user"></i>
+                    <span>My Profile</span>
+                </li>
+                <li>
+                    <li class="nav-item active" data-target="profile">
+                        <i class="fas fa-user"></i>
+                        <span ><a href = "{% url 'predict_disease_page' %}">Predict Disease </a></span>
+                    </li>  
+                </li>
+                
+                {% if is_petowner %}
+                    <li class="nav-item" data-target="your-pets">
+                        <i class="fas fa-paw"></i>
+                        <span>Your Pets</span>
+                    </li>
+                    <li class="nav-item" data-target="predict-disease">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Predict Disease</span>
+                    </li>
+                    <li class="nav-item" data-target="book-vet">
+                        <i class="fas fa-user-md"></i>
+                        <span>Book Vet</span>
+                    </li>
+                    <li class="nav-item" data-target="book-daycare">
+                        <i class="fas fa-home"></i>
+                        <span>Book Daycare</span>
+                    </li>
+                {% elif is_vet %}
+                    <li class="nav-item" data-target="current-pets">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Current Pets</span>
+                    </li>
+                    <li class="nav-item" data-target="clients">
+                        <i class="fas fa-users"></i>
+                        <span>Clients</span>
+                    </li>
+                {% elif is_daycare %}
+                    <li class="nav-item" data-target="current-pets">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>Current Pets</span>
+                    </li>
+                    <li class="nav-item" data-target="clients">
+                        <i class="fas fa-users"></i>
+                        <span>Clients</span>
+                    </li>
+                {% endif %}
+                
+                <li class="nav-item" data-target="notifications">
+                    <i class="fas fa-bell"></i>
+                    <span>Notifications</span>
+                    {% if notification_count > 0 %}
+                        <span class="notification-badge">{{ notification_count }}</span>
+                    {% endif %}
+                </li>
+                
+                <li class="nav-item logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="search-container">
+                <input type="text" placeholder="Search..." class="search-input">
+                <button class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <div class="top-bar-right">
+                <div class="notifications-dropdown">
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        {% if notification_count > 0 %}
+                            <span class="notification-badge small">{{ notification_count }}</span>
+                        {% endif %}
+                    </button>
+                </div>
+                
+                <div class="user-dropdown">
+                    <button class="user-btn">
+                        <img src="{% static 'images/user-avatar.png' %}" alt="User Avatar">
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Section - Visible for all users -->
+        <div class="content-section active" id="profile">
+            <div class="section-header">
+                <h2>My Profile</h2>
+                <button class="edit-btn">
+                    <i class="fas fa-edit"></i> Edit Profile
+                </button>
+            </div>
+            
+            <div class="profile-card">
+                <div class="profile-info">
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="label">Name</span>
+                            <span class="value">{{ user.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Email</span>
+                            <span class="value">{{ user.email }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="label">Phone Number</span>
+                            <span class="value">{{ user.phone_number }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Address</span>
+                            <span class="value">{{ user.address }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if is_petowner %}
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="label">Emergency Contact</span>
+                            <span class="value">{{ petowner.emergency_contact }}</span>
+                        </div>
+                    </div>
+                    {% elif is_vet %}
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="label">Specialization</span>
+                            <span class="value">{{ vet.specialization }}</span>
+                        </div>
+                    </div>
+                    {% elif is_daycare %}
+                    <div class="info-group">
+                        <div class="info-item">
+                            <span class="label">Indoor Facilities</span>
+                            <span class="value">{{ daycare.indoor }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Pet Types Accepted</span>
+                            <span class="value">{{ daycare.pet_type }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pet Owner Specific Sections -->
+        {% if is_petowner %}
+        <div class="content-section" id="your-pets">
+            <div class="section-header">
+                <h2>Your Pets</h2>
+                <button class="add-btn">
+                    <i class="fas fa-plus"></i> Add New Pet
+                </button>
+            </div>
+            
+            <div class="pets-grid">
+                <div class="pet-card placeholder">
+                    <div class="pet-info">
+                        <h3>Placeholder Pet</h3>
+                        <p>Species: Dog</p>
+                        <p>Age: 3 years</p>
+                    </div>
+                    <div class="pet-actions">
+                        <button class="view-btn">View Details</button>
+                    </div>
+                </div>
+                <!-- More pet cards would be here -->
+            </div>
+        </div>
+        
+        <div class="content-section" id="predict-disease">
+            <div class="section-header">
+                <h2>Predict Disease</h2>
+            </div>
+            
+            <!-- Include the disease prediction component here -->
+            <div class="symptoms-container">
+                <div class="symptoms-form">
+                    <h3>Select Symptoms</h3>
+                    <p class="instructions">Check all symptoms that your pet is experiencing:</p>
+                    
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <input type="text" id="symptom-search" placeholder="Search symptoms..." class="search-input">
+                        <button type="button" id="clear-search" class="clear-btn">✕</button>
+                    </div>
+                    
+                    <div class="checkbox-group" id="symptoms-checkboxes">
+                        {% for symptom in symptoms %}
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="symptom-{{ symptom.id }}" name="symptoms" value="{{ symptom.id }}">
+                                <label for="symptom-{{ symptom.id }}">{{ symptom.name }}</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="button" id="predict-btn" class="btn">Predict Disease</button>
+                    
+                    <div id="results" class="results-container" style="display: none;">
+                        <h3>Prediction Results</h3>
+                        <div id="prediction-result"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section" id="book-vet">
+            <div class="section-header">
+                <h2>Book Veterinarian</h2>
+            </div>
+            
+            <div class="booking-container">
+                <div class="search-filters">
+                    <div class="filter-group">
+                        <label>Specialization</label>
+                        <select class="filter-select">
+                            <option value="">All Specializations</option>
+                            <option value="general">General Practice</option>
+                            <option value="surgery">Surgery</option>
+                            <option value="dermatology">Dermatology</option>
+                            <option value="dental">Dental</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Date</label>
+                        <input type="date" class="date-picker">
+                    </div>
+                    
+                    <button class="search-filter-btn">Search</button>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="vet-card placeholder">
+                        <div class="vet-info">
+                            <h3>Dr. John Smith</h3>
+                            <p>Specialization: General Practice</p>
+                            <p>Available: 9AM - 5PM</p>
+                        </div>
+                        <div class="vet-actions">
+                            <button class="book-btn">Book Appointment</button>
+                        </div>
+                    </div>
+                    <!-- More vet cards would be here -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-section" id="book-daycare">
+            <div class="section-header">
+                <h2>Book Daycare</h2>
+            </div>
+            
+            <div class="booking-container">
+                <div class="search-filters">
+                    <div class="filter-group">
+                        <label>Pet Type</label>
+                        <select class="filter-select">
+                            <option value="">All Types</option>
+                            <option value="dog">Dogs</option>
+                            <option value="cat">Cats</option>
+                            <option value="bird">Birds</option>
+                            <option value="exotic">Exotic</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Indoor Only</label>
+                        <select class="filter-select">
+                            <option value="">Any</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                    
+                    <button class="search-filter-btn">Search</button>
+                </div>
+                
+                <div class="results-grid">
+                    <div class="daycare-card placeholder">
+                        <div class="daycare-info">
+                            <h3>Happy Paws Daycare</h3>
+                            <p>Pet Types: Dogs, Cats</p>
+                            <p>Indoor Facilities: Yes</p>
+                        </div>
+                        <div class="daycare-actions">
+                            <button class="book-btn">Book Now</button>
+                        </div>
+                    </div>
+                    <!-- More daycare cards would be here -->
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Vet Specific Sections -->
+        {% if is_vet %}
+        <div class="content-section" id="current-pets">
+            <div class="section-header">
+                <h2>Current Pets</h2>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Pet Name</th>
+                            <th>Owner</th>
+                            <th>Species</th>
+                            <th>Appointment Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="placeholder">
+                            <td>Max</td>
+                            <td>John Doe</td>
+                            <td>Dog</td>
+                            <td>2025-05-05</td>
+                            <td><span class="status pending">Pending</span></td>
+                            <td>
+                                <button class="action-btn view">View</button>
+                                <button class="action-btn edit">Edit</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="content-section" id="clients">
+            <div class="section-header">
+                <h2>Clients</h2>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Pets</th>
+                            <th>Phone</th>
+                            <th>Last Visit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="placeholder">
+                            <td>John Doe</td>
+                            <td>Max, Bella</td>
+                            <td>(123) 456-7890</td>
+                            <td>2025-04-25</td>
+                            <td>
+                                <button class="action-btn view">View</button>
+                                <button class="action-btn contact">Contact</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Daycare Specific Sections -->
+        {% if is_daycare %}
+        <div class="content-section" id="current-pets">
+            <div class="section-header">
+                <h2>Current Pets</h2>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Pet Name</th>
+                            <th>Owner</th>
+                            <th>Check-in Time</th>
+                            <th>Check-out Time</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="placeholder">
+                            <td>Max</td>
+                            <td>John Doe</td>
+                            <td>2025-05-04 09:00 AM</td>
+                            <td>2025-05-04 05:00 PM</td>
+                            <td><span class="status active">Checked In</span></td>
+                            <td>
+                                <button class="action-btn view">View</button>
+                                <button class="action-btn checkout">Check Out</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="content-section" id="clients">
+            <div class="section-header">
+                <h2>Clients</h2>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Pets</th>
+                            <th>Phone</th>
+                            <th>Last Visit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="placeholder">
+                            <td>John Doe</td>
+                            <td>Max, Bella</td>
+                            <td>(123) 456-7890</td>
+                            <td>2025-04-25</td>
+                            <td>
+                                <button class="action-btn view">View</button>
+                                <button class="action-btn contact">Contact</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Notifications Section - Common for all users -->
+        <div class="content-section" id="notifications">
+            <div class="section-header">
+                <h2>Notifications</h2>
+                <button class="mark-all-btn">
+                    <i class="fas fa-check-double"></i> Mark All as Read
+                </button>
+            </div>
+            
+            <div class="notifications-list">
+                <div class="notification-item unread placeholder">
+                    <div class="notification-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="notification-content">
+                        <p class="notification-text">You have an appointment scheduled for tomorrow at 10:00 AM.</p>
+                        <span class="notification-time">2 hours ago</span>
+                    </div>
+                    <div class="notification-actions">
+                        <button class="mark-read-btn">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </div>
+                </div>
+                <!-- More notification items would be here -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
