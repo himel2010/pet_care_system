@@ -11,5 +11,8 @@ urlpatterns = [
     path('predict_disease/', views.predict_disease, name='predict_disease'),
     path('dashboard/', views.dashboard, name = 'dashboard'),
     path('login_validation/', views.login_validation, name='login_validation'),
+    path('pet_register/', views.pet_register, name = 'pet_register'),
+    path('api_pet_reg/', views.api_pet_reg, name='api_pet_reg'),
+    path('pet_register/', views.pet_register, name='pet_register'),
 
 ]

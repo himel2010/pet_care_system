@@ -1,6 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate, login, logout
 import json
 from .models import*
 
@@ -18,14 +19,49 @@ def messenger(request):
 def register(request):
     return render(request, 'pages/register.html')
 
-# pages/views.py
+def pet_register(request):
+    return render(request, 'pages/pet_register.html')
 
 
+@csrf_exempt
+def api_pet_reg(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+           
+
+            kind = data.get('type')
+            name = data.get('name')
+            breed = data.get('breed')
+            allergy = data.get('allergy')
+            last_visit = data.get('last_visit')
+            test_result = data.get('test_result')
+            vaccine_name = data.get('vaccine_name')
+            vaccine_date = data.get('vaccine_date')
+            age = data.get('age')
+            owner = Petowner.objects.get(userid=14)
+
+            #owner = Petowner.objects.get(userid=14) #14 number pet owner ache, database e 14 number pet owner ta ache , owner holo foriegn key,tai evabe likhsi
+
+            pet = Pet(type = kind, name = name, breed = breed, allergy = allergy,
+                       last_visit = last_visit, test_result = test_result, vaccine_name = vaccine_name, vaccine_date = vaccine_date,ownerid = owner, age = age)
+            pet.save()
+
+            return JsonResponse({'success': True, 'message': 'Pet registered successfully'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
+    else:
+        return JsonResponse({'success': False, 'message': 'Only POST requests are allowed'})
+            #data = json.loads(request.body)
+            
+def pet_register(request):
+    return render(request, 'pages/pet_register.html')
 
 @csrf_exempt
 def api_register(request):
     if request.method == 'POST':
         try:
+
             data = json.loads(request.body)
             print(data)
 
@@ -70,6 +106,14 @@ def api_register(request):
 
                 new = Daycare(id = user, indoor = facility, pet_type = petType)
                 new.save()
+                
+            user = CustomUser.objects.create_user(
+            email=email,
+            password=password  # Django handles password hashing automatically
+            )
+            login(request, user)
+        
+            return redirect('dashboard')
 
             return JsonResponse({'success': True})
         
@@ -198,6 +242,16 @@ def login_validation(request):
             email = data.get('email')
             password = data.get('password')
             print(email, password)
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                login(request, user)  # This creates the session
+                return redirect('home')
+            else:
+                # Handle invalid login
+                pass
             
             try:
                 user = User.objects.get(email=email)

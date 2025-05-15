@@ -7,6 +7,41 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
 
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+
+
+class UserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        """
+        Creates and saves a User with the given email and password.
+        """
+        if not email:
+            raise ValueError('Users must have an email address')
+        
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)  # This properly hashes the password
+        user.save(using=self._db)
+        return user
+    
+    def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Creates and saves a superuser with the given email and password.
+        """
+        return self.create_user(email, password, **extra_fields)
+
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(unique=True)
+    
+    objects = UserManager()
+    
+    USERNAME_FIELD = 'email'  # Use email as the unique identifier
+    REQUIRED_FIELDS = []  # Email is automatically required
+    
+    def __str__(self):
+        return self.email
+
 
 class AuthGroup(models.Model):
     name = models.CharField(unique=True, max_length=150)
@@ -144,7 +179,7 @@ class DjangoSession(models.Model):
         db_table = 'django_session'
 
 
-class Ownerappointvet(models.Model):
+class appointvOwneret(models.Model):
     petid = models.OneToOneField('Pet', models.DO_NOTHING, db_column='petID', primary_key=True)  # Field name made lowercase.
     ownerid = models.ForeignKey('Petowner', models.DO_NOTHING, db_column='ownerID')  # Field name made lowercase.
     vid = models.ForeignKey('Vet', models.DO_NOTHING, db_column='vID')  # Field name made lowercase.
@@ -236,7 +271,6 @@ class Ownervetchat(models.Model):
 
 
 class Pet(models.Model):
-    id = models.IntegerField(primary_key=True)
     type = models.CharField(max_length=20, blank=True, null=True)
     name = models.CharField(max_length=30, blank=True, null=True)
     breed = models.CharField(max_length=20, blank=True, null=True)
@@ -250,7 +284,7 @@ class Pet(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'pet'
+        db_table = 'Pet'
 
 
 class Pethassymptom(models.Model):
