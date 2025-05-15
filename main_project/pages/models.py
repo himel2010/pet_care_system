@@ -123,7 +123,6 @@ class Daycare(models.Model):
 
 
 class Diseases(models.Model):
-    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50, blank=True, null=True)
     treatment = models.CharField(max_length=255, blank=True, null=True)
     medicine_name = models.CharField(max_length=50, blank=True, null=True)
@@ -131,7 +130,8 @@ class Diseases(models.Model):
 
     class Meta:
         managed = False
-        db_table = 'diseases'
+        db_table = 'Diseases'
+
 
 
 class DjangoAdminLog(models.Model):
@@ -309,14 +309,13 @@ class Petowner(models.Model):
 
 
 class Symptom(models.Model):
-    id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50, blank=True, null=True)
     physical = models.CharField(max_length=50, blank=True, null=True)
     behavioural = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         managed = False
-        db_table = 'symptom'
+        db_table = 'Symptom'
 
 
 class Symptomindicatesdiseases(models.Model):
