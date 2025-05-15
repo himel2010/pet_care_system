@@ -42,7 +42,7 @@
         }
         .vet-card {
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 15px;
             margin-bottom: 10px;
             border-radius: 4px;
             cursor: pointer;
@@ -99,6 +99,67 @@
             padding: 10px;
             border-radius: 4px;
         }
+        .rating-stars {
+            color: #ffc107;
+            font-size: 16px;
+        }
+        .see-reviews {
+            color: #3a7bd5;
+            text-decoration: none;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .see-reviews:hover {
+            text-decoration: underline;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+        }
+        .review-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .review-rating {
+            color: #ffc107;
+            font-size: 14px;
+        }
+        .review-text {
+            margin-top: 5px;
+            color: #555;
+        }
+        .reviewer-name {
+            font-weight: bold;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -130,10 +191,11 @@
                         <h4>{{ vet_info.vet.userid.name }}</h4>
                         <p>Specialization: {{ vet_info.vet.specialization }}</p>
                         <p>Email: {{ vet_info.vet.userid.email }}</p>
-                        <p>Rating: 
+                        <p>
                             {% if vet_info.avg_rating > 0 %}
-                                <span style="color: #ffc107;">★</span> {{ vet_info.avg_rating }}/5
+                                <span class="rating-stars">★</span> {{ vet_info.avg_rating }}/5.0
                                 ({{ vet_info.review_count }} reviews)
+                                <a href="#" class="see-reviews" data-vet-id="{{ vet_info.vet.userid.id }}">See Reviews</a>
                             {% else %}
                                 No ratings yet
                             {% endif %}
@@ -162,6 +224,15 @@
         <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
     </div>
 
+    <!-- Modal for Reviews -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3 id="modalTitle">Reviews</h3>
+            <div id="reviewsContent"></div>
+        </div>
+    </div>
+
     <script>
         // Handle vet selection
         const vetCards = document.querySelectorAll('.vet-card');
@@ -179,6 +250,64 @@
                 selectedVetInput.value = this.dataset.vetId;
             });
         });
+        
+        // Handle "See Reviews" links
+        const reviewLinks = document.querySelectorAll('.see-reviews');
+        const modal = document.getElementById('reviewModal');
+        const span = document.getElementsByClassName('close')[0];
+        
+        reviewLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Prevent vet card selection
+                
+                const vetId = this.dataset.vetId;
+                
+                // Fetch reviews for this vet
+                fetch(`/get_vet_reviews/${vetId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const reviewsContent = document.getElementById('reviewsContent');
+                        const modalTitle = document.getElementById('modalTitle');
+                        
+                        modalTitle.textContent = `Reviews for ${data.vet_name}`;
+                        
+                        if (data.reviews && data.reviews.length > 0) {
+                            let reviewsHtml = '';
+                            data.reviews.forEach(review => {
+                                reviewsHtml += `
+                                    <div class="review-item">
+                                        <div class="reviewer-name">${review.reviewer_name}</div>
+                                        <div class="review-rating">
+                                            ${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+                                        </div>
+                                        <div class="review-text">${review.review}</div>
+                                    </div>
+                                `;
+                            });
+                            reviewsContent.innerHTML = reviewsHtml;
+                        } else {
+                            reviewsContent.innerHTML = '<p>No reviews yet for this veterinarian.</p>';
+                        }
+                        
+                        modal.style.display = 'block';
+                    })
+                    .catch(error => {
+                        console.error('Error fetching reviews:', error);
+                    });
+            });
+        });
+        
+        // Close modal
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
         
         // Handle form submission
         document.getElementById('request-form').addEventListener('submit', function(e) {

@@ -170,19 +170,26 @@ def dashboard(request):
         vet = Vet.objects.filter(userid=user).first()
         daycare = Daycare.objects.filter(id=user).first()
         
-        # Get user's pets if they are a pet owner
+        # Initialize variables
         pets = []
         current_appointments = []
         pending_appointments = []
         
         if petowner:
             pets = Pet.objects.filter(ownerid=petowner)
-            # Get current (accepted) appointments
+            # Get all appointments for the pet owner
             current_appointments = appointvOwneret.objects.filter(
                 ownerid=petowner,
-                accepted=True,
-                status='Pending'
+                accepted=True
             )
+            
+            # Get existing reviews for this pet owner
+            existing_reviews = Ownerratesvet.objects.filter(pid=petowner)
+            reviewed_vets = set(review.vid.userid.id for review in existing_reviews)
+            
+            # Mark appointments with review status
+            for appointment in current_appointments:
+                appointment.has_review = appointment.vid.userid.id in reviewed_vets
         
         elif vet:
             # Get pending appointment requests for vet
@@ -213,8 +220,9 @@ def dashboard(request):
         return render(request, 'pages/dashboard.html', context)
     except Exception as e:
         print(f"Dashboard error: {e}")
+        import traceback
+        traceback.print_exc()
         return redirect('login')
-
 
 def predict_disease_page(request):
     if not request.user.is_authenticated:
@@ -416,18 +424,20 @@ def update_appointment_status(request):
         # Get the appointment
         appointment = appointvOwneret.objects.get(petid__id=appointment_id)
         
-        # Update status
+        # Update status  
         appointment.status = status
         appointment.save()
         
         return JsonResponse({
             'success': True,
-            'message': 'Status updated successfully'
+            'message': f'Status updated to {status} successfully'
         })
         
+    except appointvOwneret.DoesNotExist:
+        return JsonResponse({'error': 'Appointment not found'}, status=404)
     except Exception as e:
+        print(f"Update appointment status error: {e}")
         return JsonResponse({'error': str(e)}, status=500)
-
 
 @login_required
 def add_symptom(request):
@@ -556,13 +566,19 @@ def vet_reviews(request):
         vet = Vet.objects.get(userid=user)
         
         # Get all reviews for this vet
-        reviews = Ownerratesvet.objects.filter(vid=vet)
+        reviews = Ownerratesvet.objects.filter(vid=vet).order_by('-id')
         
         # Calculate average rating
         if reviews:
             avg_rating = sum([r.rating for r in reviews]) / len(reviews)
         else:
             avg_rating = 0
+        
+        # Debug print
+        print(f"Vet: {vet.userid.name}")
+        print(f"Number of reviews: {reviews.count()}")
+        for review in reviews:
+            print(f"Review ID: {review.id}, From: {review.pid.userid.name}, Rating: {review.rating}")
         
         context = {
             'reviews': reviews,
@@ -571,10 +587,14 @@ def vet_reviews(request):
         
         return render(request, 'pages/vet_reviews.html', context)
         
-    except Exception as e:
+    except Vet.DoesNotExist:
+        print("Vet not found for user:", request.user.email)
         return redirect('dashboard')
-
-
+    except Exception as e:
+        print(f"Vet reviews error: {e}")
+        import traceback
+        traceback.print_exc()
+        return redirect('dashboard')
 # Update the request_appointment view to include ratings
 @login_required
 def request_appointment(request):
@@ -610,3 +630,50 @@ def request_appointment(request):
     except Exception as e:
         print(f"Request appointment error: {e}")
         return redirect('dashboard')
+
+@login_required
+def vet_reviews(request):
+    try:
+        user = User.objects.filter(email=request.user.email).first()
+        vet = Vet.objects.get(userid=user)
+        
+        # Get all reviews for this vet
+        reviews = Ownerratesvet.objects.filter(vid=vet)
+        
+        # Calculate average rating
+        if reviews:
+            avg_rating = sum([r.rating for r in reviews]) / len(reviews)
+        else:
+            avg_rating = 0
+        
+        context = {
+            'reviews': reviews,
+            'avg_rating': round(avg_rating, 1)
+        }
+        
+        return render(request, 'pages/vet_reviews.html', context)
+        
+    except Exception as e:
+        return redirect('dashboard')
+
+
+def get_vet_reviews(request, vet_id):
+    try:
+        vet_user = User.objects.get(id=vet_id)
+        vet = Vet.objects.get(userid=vet_user)
+        reviews = Ownerratesvet.objects.filter(vid=vet)
+        
+        reviews_data = []
+        for review in reviews:
+            reviews_data.append({
+                'reviewer_name': review.pid.userid.name,
+                'rating': review.rating,
+                'review': review.review
+            })
+        
+        return JsonResponse({
+            'vet_name': vet.userid.name,
+            'reviews': reviews_data
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=404)

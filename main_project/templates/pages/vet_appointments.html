@@ -63,6 +63,12 @@
         .btn-accept:hover {
             background-color: #218838;
         }
+        .btn-complete {
+            background-color: #17a2b8;
+        }
+        .btn-complete:hover {
+            background-color: #138496;
+        }
         .btn-danger {
             background-color: #dc3545;
         }
@@ -153,12 +159,11 @@
                     </p>
                     
                     <div class="actions">
-                        <select id="status-{{ appointment.petid.id }}" class="status-select">
-                            <option value="Pending" {% if appointment.status == 'Pending' %}selected{% endif %}>Pending</option>
-                            <option value="In Progress" {% if appointment.status == 'In Progress' %}selected{% endif %}>In Progress</option>
-                            <option value="Completed" {% if appointment.status == 'Completed' %}selected{% endif %}>Completed</option>
-                        </select>
-                        <button class="btn" onclick="updateStatus({{ appointment.petid.id }})">Update Status</button>
+                        {% if appointment.status != 'Completed' %}
+                            <button class="btn btn-complete" onclick="completeAppointment({{ appointment.petid.id }})">Mark as Completed</button>
+                        {% else %}
+                            <span style="color: #666;">Appointment completed</span>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
@@ -205,33 +210,32 @@
             });
         }
         
-        function updateStatus(appointmentId) {
-            const statusSelect = document.getElementById(`status-${appointmentId}`);
-            const status = statusSelect.value;
-            
-            fetch('/update_appointment_status/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    appointment_id: appointmentId,
-                    status: status
+        function completeAppointment(appointmentId) {
+            if (confirm('Are you sure you want to mark this appointment as completed?')) {
+                fetch('/update_appointment_status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        appointment_id: appointmentId,
+                        status: 'Completed'
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    location.reload();
-                } else {
-                    alert(data.error || 'An error occurred');
-                }
-            })
-            .catch(error => {
-                alert('Network error: ' + error);
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert(data.error || 'An error occurred');
+                    }
+                })
+                .catch(error => {
+                    alert('Network error: ' + error);
+                });
+            }
         }
         
         function getCookie(name) {

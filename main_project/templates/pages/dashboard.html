@@ -41,6 +41,13 @@
             border-radius: 3px;
             font-size: 12px;
         }
+        .completed-badge {
+            background-color: #17a2b8;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
         .btn-small {
             background-color: #3a7bd5;
             color: white;
@@ -54,6 +61,17 @@
         }
         .btn-small:hover {
             background-color: #2a5db0;
+        }
+        .btn-review {
+            background-color: #28a745;
+            margin-left: 10px;
+        }
+        .btn-review:hover {
+            background-color: #218838;
+        }
+        .status-completed {
+            color: #17a2b8;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -105,6 +123,9 @@
                         <li class="nav-item" onclick="showSection('current-clients')">
                             <span>Current Clients</span>
                         </li>
+                        <li class="nav-item" onclick="showSection('my-reviews')">
+                            <span>My Reviews</span>
+                        </li>
                         <li class="nav-item" onclick="showSection('add-symptom')">
                             <span>Add Symptoms</span>
                         </li>
@@ -121,24 +142,43 @@
             {% if is_petowner %}
                 <!-- Pet Owner Current Appointments -->
                 <div class="content-section active" id="current-appointments">
-                    <h2>Current Appointments</h2>
+                    <h2>My Appointments</h2>
+                    
+                    <h3>Upcoming Appointments</h3>
                     <div class="appointments-section">
-                        {% if current_appointments %}
-                            {% for appointment in current_appointments %}
+                        {% for appointment in current_appointments %}
+                            {% if appointment.status != 'Completed' %}
                             <div class="appointment-card">
                                 <h4>{{ appointment.petid.name }} - {{ appointment.vid.userid.name }}</h4>
                                 <p><strong>Date:</strong> {{ appointment.date }}</p>
                                 <p><strong>Time:</strong> {{ appointment.time }}</p>
                                 <p><strong>Fee:</strong> ${{ appointment.fee }}</p>
                                 <p><strong>Status:</strong> <span class="accepted-badge">{{ appointment.status }}</span></p>
-                                {% if appointment.status == 'Completed' %}
-                                    <a href="{% url 'add_review' appointment.petid.id %}" class="btn-small">Add Review</a>
+                            </div>
+                            {% endif %}
+                        {% empty %}
+                            <p>No upcoming appointments.</p>
+                        {% endfor %}
+                    </div>
+
+                    <h3>Completed Appointments</h3>
+                    <div class="appointments-section">
+                        {% for appointment in current_appointments %}
+                            {% if appointment.status == 'Completed' %}
+                            <div class="appointment-card">
+                                <h4>{{ appointment.petid.name }} - {{ appointment.vid.userid.name }}</h4>
+                                <p><strong>Date:</strong> {{ appointment.date }}</p>
+                                <p><strong>Time:</strong> {{ appointment.time }}</p>
+                                <p><strong>Fee:</strong> ${{ appointment.fee }}</p>
+                                <p><strong>Status:</strong> <span class="completed-badge">{{ appointment.status }}</span></p>
+                                {% if not appointment.has_review %}
+                                    <a href="{% url 'add_review' appointment.petid.id %}" class="btn-small btn-review">Add Review</a>
+                                {% else %}
+                                    <span style="color: #28a745;">✓ Review submitted</span>
                                 {% endif %}
                             </div>
-                            {% endfor %}
-                        {% else %}
-                            <p>No current appointments.</p>
-                        {% endif %}
+                            {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
                 
@@ -221,6 +261,13 @@
                         {% else %}
                             <p>No current clients.</p>
                         {% endif %}
+                    </div>
+                </div>
+                
+                <div class="content-section" id="my-reviews">
+                    <h2>My Reviews</h2>
+                    <div style="text-align: center; padding: 20px;">
+                        <a href="{% url 'vet_reviews' %}" class="btn">View All Reviews</a>
                     </div>
                 </div>
                 

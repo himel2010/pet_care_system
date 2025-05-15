@@ -120,7 +120,7 @@ class appointvOwneret(models.Model):
     fee = models.IntegerField(blank=True, null=True)
     status = models.CharField(max_length=255, blank=True, null=True)
     prescription = models.CharField(max_length=255, blank=True, null=True)
-    date = models.DateField(blank=True, null=True)  # Add this field
+    date = models.DateField(blank=True, null=True)
     accepted = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -128,10 +128,11 @@ class appointvOwneret(models.Model):
         db_table = 'ownerappointvet'
         unique_together = (('petid', 'vid', 'ownerid'),)
 
+
 class Ownerappointvet(models.Model):
-    petid = models.OneToOneField('Pet', models.DO_NOTHING, db_column='petID', primary_key=True)  # Field name made lowercase.
-    ownerid = models.ForeignKey('Petowner', models.DO_NOTHING, db_column='ownerID')  # Field name made lowercase.
-    vid = models.ForeignKey('Vet', models.DO_NOTHING, db_column='vID')  # Field name made lowercase.
+    petid = models.OneToOneField('Pet', models.DO_NOTHING, db_column='petID', primary_key=True)
+    ownerid = models.ForeignKey('Petowner', models.DO_NOTHING, db_column='ownerID')
+    vid = models.ForeignKey('Vet', models.DO_NOTHING, db_column='vID')
     time = models.CharField(max_length=255, blank=True, null=True)
     fee = models.IntegerField(blank=True, null=True)
     status = models.CharField(max_length=255, blank=True, null=True)
@@ -144,6 +145,7 @@ class Ownerappointvet(models.Model):
         db_table = 'ownerappointvet'
         unique_together = (('petid', 'vid', 'ownerid'),)
 
+
 class Ownerratesvet(models.Model):
     id = models.AutoField(primary_key=True)
     vid = models.ForeignKey('Vet', models.DO_NOTHING, db_column='vID')
@@ -154,7 +156,8 @@ class Ownerratesvet(models.Model):
     class Meta:
         managed = False
         db_table = 'ownerratesvet'
-        
+
+
 class Symptomindicatesdiseases(models.Model):
     sid = models.OneToOneField(Symptom, models.DO_NOTHING, db_column='sID', primary_key=True)
     did = models.ForeignKey(Diseases, models.DO_NOTHING, db_column='dID')
