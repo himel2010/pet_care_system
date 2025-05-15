@@ -1,25 +1,27 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login as django_login, logout
 import json
-from .models import*
+from .models import *
+from django.contrib.auth.decorators import login_required
 
 
-# Create your views here.
 def home(request):
     return render(request, 'pages/home.html')
+
 
 def login(request):
     return render(request, 'pages/login.html')
 
-def messenger(request):
-    return render(request, 'pages/messenger.html')
 
 def register(request):
     return render(request, 'pages/register.html')
 
+
 def pet_register(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     return render(request, 'pages/pet_register.html')
 
 
@@ -28,51 +30,54 @@ def api_pet_reg(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-           
-
-            kind = data.get('type')
-            name = data.get('name')
-            breed = data.get('breed')
-            allergy = data.get('allergy')
-            last_visit = data.get('last_visit')
-            test_result = data.get('test_result')
-            vaccine_name = data.get('vaccine_name')
-            vaccine_date = data.get('vaccine_date')
-            age = data.get('age')
-            owner = Petowner.objects.get(userid=14)
-
-            #owner = Petowner.objects.get(userid=14) #14 number pet owner ache, database e 14 number pet owner ta ache , owner holo foriegn key,tai evabe likhsi
-
-            pet = Pet(type = kind, name = name, breed = breed, allergy = allergy,
-                       last_visit = last_visit, test_result = test_result, vaccine_name = vaccine_name, vaccine_date = vaccine_date,ownerid = owner, age = age)
+            
+            # Get the current logged-in user's petowner
+            try:
+                custom_user = request.user
+                user = User.objects.filter(email=custom_user.email).first()
+                if not user:
+                    return JsonResponse({'success': False, 'message': 'User not found'})
+                
+                petowner = Petowner.objects.get(userid=user)
+            except Petowner.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'You must be a pet owner to register a pet'})
+            
+            # Create the pet
+            pet = Pet(
+                type=data.get('type'),
+                name=data.get('name'),
+                breed=data.get('breed'),
+                allergy=data.get('allergy'),
+                last_visit=data.get('last_visit'),
+                test_result=data.get('test_result'),
+                vaccine_name=data.get('vaccine_name'),
+                vaccine_date=data.get('vaccine_date'),
+                ownerid=petowner,
+                age=data.get('age')
+            )
             pet.save()
-
+            
             return JsonResponse({'success': True, 'message': 'Pet registered successfully'})
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
     else:
         return JsonResponse({'success': False, 'message': 'Only POST requests are allowed'})
-            #data = json.loads(request.body)
-            
-def pet_register(request):
-    return render(request, 'pages/pet_register.html')
+
 
 @csrf_exempt
 def api_register(request):
     if request.method == 'POST':
         try:
-
             data = json.loads(request.body)
-            print(data)
-
+            
             user_type = data.get('user_type')
             name = data.get('name')
             email = data.get('email')
             password = data.get('password')
             phone_number = data.get('phone_number')
             address = data.get('address')
-
-            # Insert into database
+            
+            # Create regular User
             user = User(
                 name=name,
                 email=email,
@@ -80,41 +85,35 @@ def api_register(request):
                 phone_number=phone_number,
                 address=address,
             )
-            
             user.save()
-            print("User saved with ID:", user.id)  # Check if this shows a valid ID
             
-            if user_type == 'pet_owner':
-                new = Petowner(userid = user,
-                               emergency_contact = data.get('emergency_contact'))
-                
-                new.save()
-            
-            elif user_type == 'vet':
-                new = Vet(userid = user, specialization = data.get('emergency_contact'))
-                new.save()
-                
-            elif user_type == 'daycare':
-                facility = data.get('facility')
-                for key, value in facility.items():
-                    
-                    if value:
-                        facility = key
-                        break
-                    
-                petType = data.get('pet_types')[0]
-
-                new = Daycare(id = user, indoor = facility, pet_type = petType)
-                new.save()
-                
-            user = CustomUser.objects.create_user(
-            email=email,
-            password=password  # Django handles password hashing automatically
+            # Create CustomUser for authentication
+            custom_user = CustomUser.objects.create_user(
+                email=email,
+                password=password
             )
-            login(request, user)
-        
-            return redirect('dashboard')
-
+            
+            # Create specific user type
+            if user_type == 'pet_owner':
+                Petowner.objects.create(
+                    userid=user,
+                    emergency_contact=data.get('emergency_contact')
+                )
+            elif user_type == 'vet':
+                Vet.objects.create(
+                    userid=user,
+                    specialization=data.get('specialization', data.get('emergency_contact'))
+                )
+            elif user_type == 'daycare':
+                Daycare.objects.create(
+                    id=user,
+                    indoor=data.get('facility', {}).get('indoor', 'No'),
+                    pet_type=data.get('pet_types', [''])[0]
+                )
+            
+            # Login the user
+            django_login(request, custom_user)
+            
             return JsonResponse({'success': True})
         
         except Exception as e:
@@ -123,43 +122,130 @@ def api_register(request):
     else:
         return JsonResponse({'success': False, 'message': 'Only POST requests are allowed'})
 
-@csrf_exempt
-def predict_disease_page(request):
 
-    # Get all symptoms from the database
+@csrf_exempt
+def login_validation(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email')
+            password = data.get('password')
+            
+            # Authenticate with CustomUser
+            user = authenticate(request, username=email, password=password)
+            
+            if user is not None:
+                django_login(request, user)
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Login successful'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Invalid credentials'
+                })
+                
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid JSON data'
+            }, status=400)
+    
+    return JsonResponse({
+        'success': False,
+        'message': 'Only POST method is allowed'
+    }, status=405)
+
+
+@login_required
+def dashboard(request):
+    try:
+        # Get the User object based on the CustomUser email
+        user = User.objects.filter(email=request.user.email).first()
+        if not user:
+            return redirect('login')
+        
+        petowner = Petowner.objects.filter(userid=user).first()
+        vet = Vet.objects.filter(userid=user).first()
+        daycare = Daycare.objects.filter(id=user).first()
+        
+        # Get user's pets if they are a pet owner
+        pets = []
+        current_appointments = []
+        pending_appointments = []
+        
+        if petowner:
+            pets = Pet.objects.filter(ownerid=petowner)
+            # Get current (accepted) appointments
+            current_appointments = appointvOwneret.objects.filter(
+                ownerid=petowner,
+                accepted=True,
+                status='Pending'
+            )
+        
+        elif vet:
+            # Get pending appointment requests for vet
+            pending_appointments = appointvOwneret.objects.filter(
+                vid=vet,
+                accepted=False
+            )
+            # Get current clients (accepted appointments)
+            current_appointments = appointvOwneret.objects.filter(
+                vid=vet,
+                accepted=True
+            )
+        
+        context = {
+            'user': user,
+            'is_petowner': bool(petowner),
+            'is_vet': bool(vet),
+            'is_daycare': bool(daycare),
+            'petowner': petowner,
+            'vet': vet,
+            'daycare': daycare,
+            'pets': pets,
+            'current_appointments': current_appointments,
+            'pending_appointments': pending_appointments,
+            'notification_count': len(pending_appointments) if vet else 0
+        }
+        
+        return render(request, 'pages/dashboard.html', context)
+    except Exception as e:
+        print(f"Dashboard error: {e}")
+        return redirect('login')
+
+
+def predict_disease_page(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
     symptoms = Symptom.objects.all().order_by('name')
     
-    # Pass symptoms to the template
     context = {
         'symptoms': symptoms,
     }
     
     return render(request, 'pages/predict_disease.html', context)
 
+
+@csrf_exempt
 def predict_disease(request):
-    """
-    API endpoint to predict disease based on selected symptoms
-    """
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
     
     try:
-        # Parse the JSON data from the request body
         data = json.loads(request.body)
         symptom_ids = data.get('symptoms', [])
         
-        # Validate that symptom IDs are provided
         if not symptom_ids:
             return JsonResponse({'error': 'No symptoms provided'}, status=400)
         
-        # Convert string IDs to integers if needed
         symptom_ids = [int(sid) for sid in symptom_ids]
         
-        # Call the prediction algorithm
         disease, confidence = predict_disease_algorithm(symptom_ids)
         
         if disease:
-            # Return prediction result
             return JsonResponse({
                 'disease': {
                     'id': disease.id,
@@ -176,26 +262,20 @@ def predict_disease(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-def predict_disease_algorithm(symptom_ids):
 
-    # Dictionary to store disease scores
+def predict_disease_algorithm(symptom_ids):
     disease_scores = {}
     
-    # Get all symptom-disease relationships for the selected symptoms
     symptom_relations = Symptomindicatesdiseases.objects.filter(sid__in=symptom_ids)
     
-    # If no relations found, return None
     if not symptom_relations.exists():
         return None, 0
     
-    # Calculate score for each disease
     for relation in symptom_relations:
         disease_id = relation.did.id
         
-        # Calculate score as importance * probability
         score = relation.importance * relation.probablity if relation.importance and relation.probablity else 0
         
-        # Add score to disease total
         if disease_id in disease_scores:
             disease_scores[disease_id]['score'] += score
             disease_scores[disease_id]['count'] += 1
@@ -206,80 +286,327 @@ def predict_disease_algorithm(symptom_ids):
                 'disease': relation.did
             }
     
-    # Find the disease with the highest score
     max_score = 0
     best_disease = None
     confidence = 0
     
     for disease_id, data in disease_scores.items():
-        # Calculate average score to account for number of symptoms
         avg_score = data['score'] / data['count']
         
         if avg_score > max_score:
             max_score = avg_score
             best_disease = data['disease']
             
-            # Calculate confidence as a percentage of the maximum possible score
-            # Assuming max importance is 10 and max probability is 100
-            max_possible = 10 * 100  # max importance * max probability
+            max_possible = 10 * 100
             confidence = min(round((avg_score / max_possible) * 100), 100)
     
     return best_disease, confidence
 
 
-def dashboard(request):
-    return render(request, 'pages/dashboard.html')
+@login_required
+def request_appointment(request):
+    try:
+        # Get user's pets
+        user = User.objects.filter(email=request.user.email).first()
+        petowner = Petowner.objects.filter(userid=user).first()
+        pets = Pet.objects.filter(ownerid=petowner) if petowner else []
+        
+        # Get all vets
+        vets = Vet.objects.all()
+        
+        context = {
+            'pets': pets,
+            'vets': vets
+        }
+        
+        return render(request, 'pages/request_appointment.html', context)
+    except Exception as e:
+        print(f"Request appointment error: {e}")
+        return redirect('dashboard')
 
 
 @csrf_exempt
-def login_validation(request):
-
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            # Process your login validation here
-            # Example: Check email/password against database
-            email = data.get('email')
-            password = data.get('password')
-            print(email, password)
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-            user = authenticate(request, username=username, password=password)
-            
-            if user is not None:
-                login(request, user)  # This creates the session
-                return redirect('home')
-            else:
-                # Handle invalid login
-                pass
-            
-            try:
-                user = User.objects.get(email=email)
-                passw = User.objects.get(password = password)
-                print(user, passw)
-                if user and passw: 
-                    return JsonResponse({
-                        'success': True,
-                        'message': 'Login successful'
-                    })
-                else:
-                    return JsonResponse({
-                        'success': False,
-                        'message': 'Invalid credentials'
-                    })
-            except Petowner.DoesNotExist:
-                return JsonResponse({
-                    'success': False,
-                    'message': 'User not found'
-                })
-                
-        except json.JSONDecodeError:
+def create_appointment_request(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        
+        # Get current user's petowner
+        user = User.objects.filter(email=request.user.email).first()
+        petowner = Petowner.objects.get(userid=user)
+        
+        # Get selected pet and vet
+        pet = Pet.objects.get(id=data.get('pet_id'))
+        vet = Vet.objects.get(userid__id=data.get('vet_id'))
+        
+        # Check if appointment already exists
+        existing = appointvOwneret.objects.filter(
+            petid=pet,
+            ownerid=petowner,
+            vid=vet
+        ).first()
+        
+        if existing:
             return JsonResponse({
                 'success': False,
-                'message': 'Invalid JSON data'
-            }, status=400)
+                'message': 'An appointment request already exists for this pet with this vet'
+            })
+        
+        # Create appointment request (not accepted yet, no fee)
+        appointment = appointvOwneret(
+            petid=pet,
+            ownerid=petowner,
+            vid=vet,
+            time=data.get('time'),
+            date=data.get('date'),
+            fee=None,  # No fee until vet accepts
+            status='Pending',
+            accepted=False
+        )
+        appointment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Appointment request sent successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def accept_appointment(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
     
-    return JsonResponse({
-        'success': False,
-        'message': 'Only POST method is allowed'
-    }, status=405)
+    try:
+        data = json.loads(request.body)
+        appointment_id = data.get('appointment_id')
+        fee = data.get('fee')
+        
+        # Get the appointment
+        appointment = appointvOwneret.objects.get(petid__id=appointment_id)
+        
+        # Update appointment
+        appointment.accepted = True
+        appointment.fee = fee
+        appointment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Appointment accepted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def update_appointment_status(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        appointment_id = data.get('appointment_id')
+        status = data.get('status')
+        
+        # Get the appointment
+        appointment = appointvOwneret.objects.get(petid__id=appointment_id)
+        
+        # Update status
+        appointment.status = status
+        appointment.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Status updated successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def add_symptom(request):
+    if request.method == 'GET':
+        return render(request, 'pages/add_symptom.html')
+    
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            
+            symptom = Symptom(
+                name=data.get('name'),
+                physical=data.get('physical'),
+                behavioural=data.get('behavioural')
+            )
+            symptom.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Symptom added successfully'
+            })
+            
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def vet_appointments(request):
+    try:
+        user = User.objects.filter(email=request.user.email).first()
+        vet = Vet.objects.get(userid=user)
+        
+        # Get pending and accepted appointments
+        pending_appointments = appointvOwneret.objects.filter(
+            vid=vet,
+            accepted=False
+        )
+        accepted_appointments = appointvOwneret.objects.filter(
+            vid=vet,
+            accepted=True
+        )
+        
+        context = {
+            'pending_appointments': pending_appointments,
+            'accepted_appointments': accepted_appointments
+        }
+        
+        return render(request, 'pages/vet_appointments.html', context)
+        
+    except Exception as e:
+        print(f"Vet appointments error: {e}")
+        return redirect('dashboard')
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('home')
+
+@login_required
+def add_review(request, appointment_id):
+    try:
+        # Get the appointment
+        appointment = appointvOwneret.objects.get(petid__id=appointment_id)
+        
+        # Check if user is the pet owner
+        user = User.objects.filter(email=request.user.email).first()
+        petowner = Petowner.objects.get(userid=user)
+        
+        if appointment.ownerid != petowner:
+            return redirect('dashboard')
+        
+        # Check if appointment is completed
+        if appointment.status != 'Completed':
+            return redirect('dashboard')
+        
+        context = {
+            'appointment': appointment
+        }
+        
+        return render(request, 'pages/add_review.html', context)
+    except Exception as e:
+        return redirect('dashboard')
+
+
+@csrf_exempt
+def submit_review(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        
+        # Get current user's petowner
+        user = User.objects.filter(email=request.user.email).first()
+        petowner = Petowner.objects.get(userid=user)
+        
+        # Get the appointment
+        appointment = appointvOwneret.objects.get(petid__id=data.get('appointment_id'))
+        
+        # Check if user owns this appointment
+        if appointment.ownerid != petowner:
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        # Create review
+        review = Ownerratesvet(
+            vid=appointment.vid,
+            pid=petowner,
+            review=data.get('review'),
+            rating=data.get('rating')
+        )
+        review.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Review submitted successfully'
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def vet_reviews(request):
+    try:
+        user = User.objects.filter(email=request.user.email).first()
+        vet = Vet.objects.get(userid=user)
+        
+        # Get all reviews for this vet
+        reviews = Ownerratesvet.objects.filter(vid=vet)
+        
+        # Calculate average rating
+        if reviews:
+            avg_rating = sum([r.rating for r in reviews]) / len(reviews)
+        else:
+            avg_rating = 0
+        
+        context = {
+            'reviews': reviews,
+            'avg_rating': round(avg_rating, 1)
+        }
+        
+        return render(request, 'pages/vet_reviews.html', context)
+        
+    except Exception as e:
+        return redirect('dashboard')
+
+
+# Update the request_appointment view to include ratings
+@login_required
+def request_appointment(request):
+    try:
+        # Get user's pets
+        user = User.objects.filter(email=request.user.email).first()
+        petowner = Petowner.objects.filter(userid=user).first()
+        pets = Pet.objects.filter(ownerid=petowner) if petowner else []
+        
+        # Get all vets with their average ratings
+        vets = Vet.objects.all()
+        vet_data = []
+        
+        for vet in vets:
+            reviews = Ownerratesvet.objects.filter(vid=vet)
+            if reviews:
+                avg_rating = sum([r.rating for r in reviews]) / len(reviews)
+            else:
+                avg_rating = 0
+            
+            vet_data.append({
+                'vet': vet,
+                'avg_rating': round(avg_rating, 1),
+                'review_count': len(reviews)
+            })
+        
+        context = {
+            'pets': pets,
+            'vet_data': vet_data
+        }
+        
+        return render(request, 'pages/request_appointment.html', context)
+    except Exception as e:
+        print(f"Request appointment error: {e}")
+        return redirect('dashboard')

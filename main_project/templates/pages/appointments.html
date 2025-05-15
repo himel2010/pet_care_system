@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appointments - Pet Care System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #3a7bd5;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #555;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .status.pending {
+            background-color: #ffc107;
+            color: #856404;
+        }
+        .status.completed {
+            background-color: #28a745;
+            color: white;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #3a7bd5;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>My Appointments</h2>
+        
+        {% if appointments %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Pet Name</th>
+                    <th>Owner</th>
+                    <th>Vet</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Fee</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appointment in appointments %}
+                <tr>
+                    <td>{{ appointment.petid.name }}</td>
+                    <td>{{ appointment.ownerid.userid.name }}</td>
+                    <td>{{ appointment.vid.userid.name }}</td>
+                    <td>{{ appointment.date|date:"Y-m-d" }}</td>
+                    <td>{{ appointment.time }}</td>
+                    <td>
+                        <span class="status {% if appointment.status == 'Pending' %}pending{% else %}completed{% endif %}">
+                            {{ appointment.status }}
+                        </span>
+                    </td>
+                    <td>${{ appointment.fee }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No appointments scheduled yet.</p>
+        {% endif %}
+        
+        <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
+    </div>
+</body>
+</html>

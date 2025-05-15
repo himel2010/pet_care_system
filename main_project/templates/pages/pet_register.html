@@ -1,3 +1,4 @@
+<!-- main_project/templates/pages/pet_register.html -->
 {% load static %}
 <!DOCTYPE html>
 <html>
@@ -9,19 +10,20 @@
     <div class="container">
         <h2>Register Pet</h2>
         <form id="pet-form">
-            <input type="text" id="type" name="type" placeholder="Pet Type" required><br>
+            {% csrf_token %}
+            <input type="text" id="type" name="type" placeholder="Pet Type (e.g., Dog, Cat)" required><br>
             <input type="text" id="name" name="name" placeholder="Pet Name" required><br>
             <input type="text" id="breed" name="breed" placeholder="Breed" required><br>
-            <input type="text" id="allergy" name="allergy" placeholder="Allergy" required><br>
-            <input type="date" id="last_visit" name="last_visit" placeholder="Last Visit" required><br>
-            <input type="text" id="test_result" name="test_result" placeholder="Test Result" required><br>
-            <input type="text" id="vaccine_name" name="vaccine_name" placeholder="Vaccine Name" required><br>
-            <input type="date" id="vaccine_date" name="vaccine_date" placeholder="Vaccine Date" required><br>
+            <input type="text" id="allergy" name="allergy" placeholder="Allergies (if any)"><br>
+            <input type="date" id="last_visit" name="last_visit" placeholder="Last Visit"><br>
+            <input type="text" id="test_result" name="test_result" placeholder="Test Result"><br>
+            <input type="text" id="vaccine_name" name="vaccine_name" placeholder="Vaccine Name"><br>
+            <input type="date" id="vaccine_date" name="vaccine_date" placeholder="Vaccine Date"><br>
             <input type="number" id="age" name="age" placeholder="Age" required><br>
-            <input type="text" id="ownerid" name="ownerid"><br>
-            <button type="submit">Submit</button>
+            <button type="submit">Register Pet</button>
         </form>
         <div id="response-message"></div>
+        <a href="{% url 'dashboard' %}" class="back-link">← Back to Dashboard</a>
     </div>
 
     <script src="{% static 'js/api_pet_reg.js' %}"></script>
